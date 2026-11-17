@@ -20,7 +20,6 @@
       overflow: hidden;
     }
 
-    /* Holographic Scanlines & Stark HUD Frame */
     body::before {
       content: " ";
       display: block;
@@ -33,7 +32,6 @@
       opacity: 0.5;
     }
 
-    /* Corner Brackets for Iron Man HUD Aesthetic */
     .hud-frame {
       position: absolute;
       top: 5px; left: 5px; right: 5px; bottom: 5px;
@@ -156,7 +154,6 @@
       color: #00ffcc;
     }
 
-    /* Screen-Filling Non-Blocking Schedule Drawer */
     .schedule-panel {
       width: 100%;
       max-height: 120px;
@@ -241,7 +238,6 @@
       </div>
     </div>
 
-    <!-- Non-blocking inline schedule drawer -->
     <div class="schedule-panel">
       <div class="schedule-header">
         <span id="sched-title">TODAY'S TIMETABLE [WEEK B]</span>
@@ -252,7 +248,7 @@
   </div>
 
   <div class="hud-footer" id="status">
-    [WAITING FOR BIOMETRIC CLEARANCE SIGNAL...]
+    [TAP SCREEN ANYWHERE TO ARM AUDIO]
   </div>
 
   <script>
@@ -262,17 +258,16 @@
     const leaveWeather = params.get("leave") || "10 degrees with lingering showers";
 
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    const dayOfWeek = now.getDay();
     const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     
     document.getElementById("time-box").textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     document.getElementById("date-box").textContent = `${days[dayOfWeek]} // ${months[now.getMonth()]} ${String(now.getDate()).padStart(2, '0')}`;
 
-    // Term & Holiday Check for Rugby School Japan
     function isSchoolInTerm() {
       const timeMs = now.getTime();
-      const autumnEnd = new Date(2026, 11, 9).getTime(); // Dec 9, 2026
+      const autumnEnd = new Date(2026, 11, 9).getTime();
       const springStart = new Date(2027, 0, 6).getTime();
       const springHalfStart = new Date(2027, 1, 13).getTime();
       const springHalfEnd = new Date(2027, 1, 22).getTime();
@@ -289,7 +284,6 @@
 
     const inTerm = isSchoolInTerm();
 
-    // Smart Leave Time Logic: Wed(3) & Fri(5) = 6:30; Mon, Tue, Thu, Sat = 7:30; Sun/Holiday = None
     function getScheduledLeaveTime() {
       if (params.get("leavetime")) return params.get("leavetime");
       if (!inTerm || dayOfWeek === 0) return null;
@@ -300,7 +294,6 @@
     const leaveTime = getScheduledLeaveTime();
     document.getElementById("leave-badge").textContent = leaveTime ? `LEAVE: ${leaveTime}` : "NO DEPARTURE";
 
-    // Hardcoded Timetables (Week A & Week B - Assignments Ignored)
     const timetables = {
       "B": {
         1: [
@@ -411,7 +404,6 @@
       }
     };
 
-    // Automatic Week A/B Calculation anchored to Monday Nov 16, 2026 = Week B
     function getActiveWeek() {
       const anchorMonday = new Date(2026, 10, 16);
       const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -438,14 +430,30 @@
       `).join("");
     }
 
-    // Alarm Sound Oscillator
     let audioCtx = null;
     let alarmInterval = null;
     let alarmPlaying = false;
+    let audioUnlocked = false;
+
+    document.body.addEventListener("click", () => {
+      if (!audioUnlocked) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        audioUnlocked = true;
+        document.getElementById("status").textContent = "[AUDIO SYSTEM ARMED & SECURE]";
+      }
+    }, { once: true });
 
     function startAlarmSound() {
       if (alarmPlaying) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       alarmPlaying = true;
 
       alarmInterval = setInterval(() => {
@@ -469,11 +477,6 @@
       if (audioCtx) audioCtx.close();
     }
 
-    window.addEventListener("load", () => {
-      try { startAlarmSound(); } catch (e) {}
-    });
-
-    // 3-Second Hold Logic
     const holdBtn = document.getElementById("holdBtn");
     const ring = document.getElementById("ring");
     const statusText = document.getElementById("status");
@@ -516,18 +519,25 @@
     holdBtn.addEventListener("mouseup", cancelHold);
     holdBtn.addEventListener("mouseleave", cancelHold);
 
-    // Natural British Voice Synthesis
     function speakBriefing(text) {
       if (!('speechSynthesis' in window)) return;
+      
+      window.speechSynthesis.cancel();
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.96; 
       utterance.pitch = 0.92; 
 
       const voices = window.speechSynthesis.getVoices();
-      const britishVoice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('British') || v.name.includes('UK')));
-      if (britishVoice) {
-        utterance.voice = britishVoice;
+      // Try finding British voice, fallback to any available English voice, or default
+      const voice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('British') || v.name.includes('UK'))) 
+                 || voices.find(v => v.lang.startsWith('en')) 
+                 || voices[0];
+                 
+      if (voice) {
+        utterance.voice = voice;
       }
+      
       window.speechSynthesis.speak(utterance);
     }
 
@@ -542,12 +552,10 @@
       holdBtn.style.color = "#00ffcc";
       holdBtn.style.borderColor = "#00ffcc";
 
-      // Exact Script Requested with Tuesday Late School Reminder & Conditional Leave Logic
       const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       
       let script = `Good morning Sir, The current time is ${currentTimeStr}, The weather today will be a high of ${highTemp} and a low of ${lowTemp}. `;
       
-      // Tuesday Late School Reminder Rule
       if (dayOfWeek === 2) {
         script += `Remember, you're staying late at school tonight, Sir. `;
       }
@@ -559,7 +567,10 @@
       script += `hope you enjoy your day today sir, wishing you the best`;
 
       statusText.textContent = `> ${script}`;
-      speakBriefing(script);
+      
+      setTimeout(() => {
+        speakBriefing(script);
+      }, 300);
     }
   </script>
 </body>
