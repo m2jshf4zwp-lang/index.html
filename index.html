@@ -248,7 +248,7 @@
   </div>
 
   <div class="hud-footer" id="status">
-    [TAP SCREEN ANYWHERE TO ARM AUDIO]
+    [TAP SCREEN ANYWHERE FIRST, THEN HOLD BUTTON]
   </div>
 
   <script>
@@ -435,14 +435,19 @@
     let alarmPlaying = false;
     let audioUnlocked = false;
 
-    document.body.addEventListener("click", () => {
+    // Global tap listener to unlock Web Audio & Speech API handles on mobile
+    window.addEventListener("pointerdown", () => {
       if (!audioUnlocked) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
+        // Force-load speech synthesis engine buffer on mobile
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.getVoices();
+        }
         audioUnlocked = true;
-        document.getElementById("status").textContent = "[AUDIO SYSTEM ARMED & SECURE]";
+        document.getElementById("status").textContent = "[AUDIO & SPEECH SYSTEMS ARMED]";
       }
     }, { once: true });
 
@@ -474,7 +479,9 @@
     function stopAlarmSound() {
       alarmPlaying = false;
       clearInterval(alarmInterval);
-      if (audioCtx) audioCtx.close();
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close();
+      }
     }
 
     const holdBtn = document.getElementById("holdBtn");
@@ -529,7 +536,6 @@
       utterance.pitch = 0.92; 
 
       const voices = window.speechSynthesis.getVoices();
-      // Try finding British voice, fallback to any available English voice, or default
       const voice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('British') || v.name.includes('UK'))) 
                  || voices.find(v => v.lang.startsWith('en')) 
                  || voices[0];
@@ -568,9 +574,8 @@
 
       statusText.textContent = `> ${script}`;
       
-      setTimeout(() => {
-        speakBriefing(script);
-      }, 300);
+      // Directly invoke speech inside the user touch release event stack
+      speakBriefing(script);
     }
   </script>
 </body>
