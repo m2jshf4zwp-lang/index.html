@@ -248,7 +248,7 @@
   </div>
 
   <div class="hud-footer" id="status">
-    [TAP SCREEN ANYWHERE FIRST, THEN HOLD BUTTON]
+    [SYSTEM ACTIVE // TAP SCREEN TO ARM SPEECH]
   </div>
 
   <script>
@@ -433,29 +433,82 @@
     let audioCtx = null;
     let alarmInterval = null;
     let alarmPlaying = false;
-    let audioUnlocked = false;
+    let speechTriggered = false;
 
-    // Global tap listener to unlock Web Audio & Speech API handles on mobile
-    window.addEventListener("pointerdown", () => {
-      if (!audioUnlocked) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        // Force-load speech synthesis engine buffer on mobile
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.getVoices();
-        }
-        audioUnlocked = true;
-        document.getElementById("status").textContent = "[AUDIO & SPEECH SYSTEMS ARMED]";
+    // Randomized Jarvis Snark Pools
+    const openingSnark = [
+      "Good morning Sir. Biometric telemetry indicates you are barely functioning.",
+      "Rise and shine Sir. My sensors suggest you hit the snooze button spiritually.",
+      "Morning Sir. Systems are online, though your enthusiasm appears offline.",
+      "Good morning Sir. Another day, another opportunity to test my patience."
+    ];
+
+    const weatherSnark = [
+      `The weather today looks like a high of ${highTemp} and a low of ${lowTemp}.`,
+      `Atmospheric conditions indicate a high of ${highTemp} and low of ${lowTemp}. Try not to freeze, Sir.`,
+      `Current outside metrics show a high of ${highTemp} and low of ${lowTemp}.`
+    ];
+
+    const leaveSnark = [
+      `Weather by your departure should be ${leaveWeather}. And please, Sir, try to leave by ${leaveTime} so we don't repeat our usual debate.`,
+      `Conditions at departure time will be ${leaveWeather}. Aim for a prompt exit at ${leaveTime}, Sir, to avoid unnecessary friction.`,
+      `Expect ${leaveWeather} around your exit window. Depart by ${leaveTime}, Sir, for optimal domestic harmony.`
+    ];
+
+    const closingSnark = [
+      "Have a productive day, Sir. Try not to break anything.",
+      "Wishing you the best today, Sir. Do try to stay out of trouble.",
+      "Protocol complete. Have an adequate day, Sir."
+    ];
+
+    function getRandomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function speakBriefing() {
+      if (speechTriggered || !('speechSynthesis' in window)) return;
+      speechTriggered = true;
+
+      const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let script = `${getRandomItem(openingSnark)} The current time is ${currentTimeStr}. ${getRandomItem(weatherSnark)} `;
+      
+      if (dayOfWeek === 2) {
+        script += `Remember, you're staying late at school tonight, Sir. `;
       }
-    }, { once: true });
 
+      if (leaveTime) {
+        script += `${getRandomItem(leaveSnark)} `;
+      }
+      
+      script += getRandomItem(closingSnark);
+
+      document.getElementById("status").textContent = `> ${script}`;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(script);
+      utterance.rate = 0.96; 
+      utterance.pitch = 0.92; 
+
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('British') || v.name.includes('UK'))) 
+                 || voices.find(v => v.lang.startsWith('en')) 
+                 || voices[0];
+                 
+      if (voice) {
+        utterance.voice = voice;
+      }
+      
+      window.speechSynthesis.speak(utterance);
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+    }
+
+    // Start Alarm Sound Effect
     function startAlarmSound() {
       if (alarmPlaying) return;
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
@@ -467,7 +520,7 @@
         const gain = audioCtx.createGain();
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -484,9 +537,15 @@
       }
     }
 
+    // Auto-trigger sound and speech on the very first screen interaction
+    window.addEventListener("pointerdown", () => {
+      startAlarmSound();
+      speakBriefing();
+    }, { once: true });
+
+    // 3-Second Hold Button to Disengage Alarm/Speech
     const holdBtn = document.getElementById("holdBtn");
     const ring = document.getElementById("ring");
-    const statusText = document.getElementById("status");
     const circumference = 376.99;
     const holdDuration = 3000;
 
@@ -497,7 +556,6 @@
     function startHold(e) {
       e.preventDefault();
       if (dismissed) return;
-      if (!alarmPlaying) startAlarmSound();
       holdStart = performance.now();
       animFrame = requestAnimationFrame(updateProgress);
     }
@@ -520,63 +578,23 @@
       ring.style.strokeDashoffset = circumference;
     }
 
+    function dismissAlarm() {
+      dismissed = true;
+      stopAlarmSound();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      holdBtn.innerHTML = "DISENGAGED";
+      holdBtn.style.color = "#00ffcc";
+      holdBtn.style.borderColor = "#00ffcc";
+      document.getElementById("status").textContent = "[PROTOCOL DISENGAGED // HAVE A GOOD DAY, SIR]";
+    }
+
     holdBtn.addEventListener("touchstart", startHold);
     holdBtn.addEventListener("mousedown", startHold);
     holdBtn.addEventListener("touchend", cancelHold);
     holdBtn.addEventListener("mouseup", cancelHold);
     holdBtn.addEventListener("mouseleave", cancelHold);
-
-    function speakBriefing(text) {
-      if (!('speechSynthesis' in window)) return;
-      
-      window.speechSynthesis.cancel();
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.96; 
-      utterance.pitch = 0.92; 
-
-      const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('British') || v.name.includes('UK'))) 
-                 || voices.find(v => v.lang.startsWith('en')) 
-                 || voices[0];
-                 
-      if (voice) {
-        utterance.voice = voice;
-      }
-      
-      window.speechSynthesis.speak(utterance);
-    }
-
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
-    }
-
-    function dismissAlarm() {
-      dismissed = true;
-      stopAlarmSound();
-      holdBtn.innerHTML = "DISENGAGED";
-      holdBtn.style.color = "#00ffcc";
-      holdBtn.style.borderColor = "#00ffcc";
-
-      const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      
-      let script = `Good morning Sir, The current time is ${currentTimeStr}, The weather today will be a high of ${highTemp} and a low of ${lowTemp}. `;
-      
-      if (dayOfWeek === 2) {
-        script += `Remember, you're staying late at school tonight, Sir. `;
-      }
-
-      if (leaveTime) {
-        script += `The time by you leave the weather should be ${leaveWeather} and please sir, try to leave by ${leaveTime} we dont want another arguement, `;
-      }
-      
-      script += `hope you enjoy your day today sir, wishing you the best`;
-
-      statusText.textContent = `> ${script}`;
-      
-      // Directly invoke speech inside the user touch release event stack
-      speakBriefing(script);
-    }
   </script>
 </body>
 </html>
