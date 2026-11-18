@@ -387,8 +387,15 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function speakBriefing() {
+    function speakBriefing(retries = 5) {
       if (!('speechSynthesis' in window)) return;
+
+      const voices = window.speechSynthesis.getVoices();
+      
+      if (voices.length === 0 && retries > 0) {
+        setTimeout(() => speakBriefing(retries - 1), 200);
+        return;
+      }
 
       const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       let script = `${getRandomItem(openingSnark)} The current time is ${currentTimeStr}. `;
@@ -410,8 +417,6 @@
       utterance.rate = 0.95; 
       utterance.pitch = 0.90; 
 
-      const voices = window.speechSynthesis.getVoices();
-      // Specifically target Google UK English Male as tested
       const voice = voices.find(v => v.name.includes('Google UK English Male')) 
                  || voices.find(v => v.lang === 'en-GB' && v.name.toLowerCase().includes('male'))
                  || voices.find(v => v.lang === 'en-GB')
@@ -424,13 +429,11 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    // Preload voices
     if ('speechSynthesis' in window) {
       window.speechSynthesis.getVoices();
       window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     }
 
-    // Unlock audio & fire briefing on first touch
     window.addEventListener("pointerdown", () => {
       speakBriefing();
       document.getElementById("status").textContent = "[JARVIS VOICE ENGINE ONLINE]";
@@ -438,4 +441,3 @@
   </script>
 </body>
 </html>
-```[cite: 1]
