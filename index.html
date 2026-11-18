@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>ALEX // Tactical HUD</title>
+  <title>ALEX // Diagnostic HUD</title>
   <style>
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     body {
@@ -39,15 +39,6 @@
       pointer-events: none;
       z-index: 9;
     }
-    .hud-frame::before, .hud-frame::after {
-      content: "";
-      position: absolute;
-      width: 15px; height: 15px;
-      border-color: #38bdf8;
-      border-style: solid;
-    }
-    .hud-frame::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
-    .hud-frame::after { top: 0; right: 0; border-width: 2px 2px 0 0; }
 
     .hud-header {
       position: relative;
@@ -71,91 +62,48 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex: 1;
       width: 100%;
       padding: 6px 0;
     }
 
-    .ai-banner {
-      text-align: center;
-    }
-
     .ai-name {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 900;
       letter-spacing: 6px;
       color: #38bdf8;
       text-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
-      margin-bottom: 1px;
+      margin-bottom: 4px;
     }
 
-    .sub-title {
-      font-size: 0.5rem;
-      letter-spacing: 3px;
-      color: rgba(56, 189, 248, 0.6);
-      text-transform: uppercase;
-    }
-
-    .schedule-panel {
+    /* Diagnostic Log Box */
+    .log-panel {
       width: 100%;
       flex: 1;
-      max-height: calc(100vh - 145px);
-      background: rgba(4, 16, 32, 0.92);
-      border: 1px solid rgba(0, 255, 204, 0.4);
+      background: rgba(4, 16, 32, 0.95);
+      border: 1px solid #00ffcc;
       border-radius: 3px;
-      padding: 8px 10px;
+      padding: 10px;
       overflow-y: auto;
       text-align: left;
-      box-shadow: inset 0 0 15px rgba(0, 255, 204, 0.1);
-      margin: 6px 0;
-    }
-
-    .schedule-header {
-      font-size: 0.55rem;
+      font-size: 0.65rem;
       color: #00ffcc;
-      font-weight: bold;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-      border-bottom: 1px solid rgba(0, 255, 204, 0.25);
-      padding-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    #eventList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .event-item {
-      font-size: 0.7rem;
-      margin-bottom: 6px;
-      display: flex;
-      justify-content: space-between;
-      color: #e2e8f0;
-      border-left: 2px solid #00ffcc;
-      padding: 4px 6px 4px 8px;
-      background: rgba(56, 189, 248, 0.06);
-    }
-
-    .event-time {
-      color: #00ffcc;
-      font-weight: bold;
+      line-height: 1.4;
+      word-break: break-all;
     }
 
     .hud-footer {
       position: relative;
       z-index: 11;
       border-top: 2px solid rgba(56, 189, 248, 0.4);
-      padding: 6px 8px;
-      min-height: 36px;
-      font-size: 0.6rem;
-      color: #00ffcc;
+      padding: 8px;
+      min-height: 40px;
+      font-size: 0.65rem;
+      color: #fff;
+      background: rgba(0, 255, 204, 0.15);
       letter-spacing: 1px;
       text-align: center;
-      text-shadow: 0 0 6px rgba(0, 255, 204, 0.4);
       cursor: pointer;
     }
   </style>
@@ -165,279 +113,92 @@
   <div class="hud-frame"></div>
 
   <div class="hud-header">
-    <div id="date-box">THU // NOV 19</div>
+    <div>DIAGNOSTIC</div>
     <div id="time-box">06:30</div>
-    <div id="leave-badge">LEAVE: 7:30</div>
+    <div>SYS.TEST</div>
   </div>
 
   <div class="dashboard">
-    <div class="ai-banner">
-      <div class="ai-name">ALEX</div>
-      <div class="sub-title" id="sub-protocol">STARK PROTOCOL // WEEK B</div>
-    </div>
-
-    <div class="schedule-panel">
-      <div class="schedule-header">
-        <span id="sched-title">TODAY'S TIMETABLE [WEEK B]</span>
-        <span>SYS.ONLINE</span>
-      </div>
-      <ul id="eventList"></ul>
+    <div class="ai-name">ALEX // DEBUG MODE</div>
+    <div class="log-panel" id="logBox">
+      [System Initialized. Waiting for screen tap...]
     </div>
   </div>
 
-  <div class="hud-footer" id="status">
-    [TAP SCREEN TO INITIALIZE JARVIS VOICE ENGINE]
+  <div class="hud-footer" id="tapPrompt">
+    [TAP HERE TO RUN SPEECH DIAGNOSTIC]
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-    
-    function updateClock() {
-      const current = new Date();
-      document.getElementById("time-box").textContent = current.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    updateClock();
-    setInterval(updateClock, 10000);
+    const logBox = document.getElementById("logBox");
 
-    document.getElementById("date-box").textContent = `${days[dayOfWeek]} // ${months[now.getMonth()]} ${String(now.getDate()).padStart(2, '0')}`;
-
-    function isSchoolInTerm() {
-      const timeMs = now.getTime();
-      const autumnEnd = new Date(2026, 11, 9).getTime();
-      const springStart = new Date(2027, 0, 6).getTime();
-      const springHalfStart = new Date(2027, 1, 13).getTime();
-      const springHalfEnd = new Date(2027, 1, 22).getTime();
-      const springEnd = new Date(2027, 2, 25).getTime();
-      const summerStart = new Date(2027, 3, 13).getTime();
-      const summerEnd = new Date(2027, 5, 27).getTime();
-
-      if (timeMs >= autumnEnd && timeMs < springStart) return false;
-      if (timeMs >= springHalfStart && timeMs < springHalfEnd) return false;
-      if (timeMs >= springEnd && timeMs < summerStart) return false;
-      if (timeMs >= summerEnd) return false;
-      return true;
+    function log(msg) {
+      console.log(msg);
+      logBox.innerHTML += `<br>> ${msg}`;
+      logBox.scrollTop = logBox.scrollHeight;
     }
 
-    const inTerm = isSchoolInTerm();
-
-    function getScheduledLeaveTime() {
-      if (params.get("leavetime")) return params.get("leavetime");
-      if (!inTerm || dayOfWeek === 0) return null;
-      if (dayOfWeek === 3 || dayOfWeek === 5) return "6:30";
-      return "7:30";
-    }
-
-    const leaveTime = getScheduledLeaveTime();
-    document.getElementById("leave-badge").textContent = leaveTime ? `LEAVE: ${leaveTime}` : "NO DEPARTURE";
-
-    const timetables = {
-      "B": {
-        1: [
-          { time: "08:30", title: "Tutor Time (Quad 206)" },
-          { time: "08:55", title: "Physics (Physics Lab 2)" },
-          { time: "09:45", title: "Chemistry (Chemistry Lab)" },
-          { time: "10:55", title: "Chemistry (Chemistry Lab)" },
-          { time: "11:45", title: "Biology (Biology Lab 3)" },
-          { time: "13:55", title: "English (Forest 203)" },
-          { time: "14:45", title: "English (Forest 203)" },
-          { time: "15:55", title: "Design (Physics Lab 4)" }
-        ],
-        2: [
-          { time: "08:30", title: "Whole School Singing" },
-          { time: "08:55", title: "Physics (Physics Lab 2)" },
-          { time: "09:45", title: "Physics (Physics Lab 2)" },
-          { time: "10:55", title: "PSHE (Field 101)" },
-          { time: "11:45", title: "Biology (Biology Lab 3)" },
-          { time: "13:55", title: "Computer Science (CAD room 1)" },
-          { time: "14:45", title: "Maths (Quad 206)" },
-          { time: "15:55", title: "English (Forest 203)" }
-        ],
-        3: [
-          { time: "07:00", title: "Swimming (7 - 8am)" },
-          { time: "08:30", title: "Whole School Assembly" },
-          { time: "08:55", title: "Japanese (Forest 202)" },
-          { time: "09:45", title: "Chemistry (Chemistry Lab)" },
-          { time: "10:55", title: "Computer Science (CAD room 2)" },
-          { time: "11:45", title: "Computer Science (CAD room 2)" },
-          { time: "13:55", title: "Maths (Quad 206)" },
-          { time: "14:45", title: "English (Forest 203)" },
-          { time: "15:55", title: "Geography (Quad 303)" }
-        ],
-        4: [
-          { time: "08:30", title: "Tutor Time (Quad 206)" },
-          { time: "08:55", title: "PSHE (Field 101)" },
-          { time: "09:45", title: "Chemistry (Chemistry Lab)" },
-          { time: "10:55", title: "Design (Physics Lab)" },
-          { time: "11:45", title: "Maths (Quad 206)" },
-          { time: "13:55", title: "Sport (1:55 - 2:40pm)" },
-          { time: "14:45", title: "Sport (2:45 - 3:30pm)" },
-          { time: "15:55", title: "Biology (Biology Lab 3)" }
-        ],
-        5: [
-          { time: "07:00", title: "Swimming (7 - 8am)" },
-          { time: "08:30", title: "Tutor Time (Quad 206)" },
-          { time: "08:55", title: "Maths (Quad 206)" },
-          { time: "09:45", title: "Physics (Physics Lab 2)" },
-          { time: "10:55", title: "Computer Science (CAD room 2)" },
-          { time: "11:45", title: "Geography (Quad 303)" },
-          { time: "13:55", title: "Chemistry (Chemistry Lab)" },
-          { time: "14:45", title: "Japanese (Forest 202)" },
-          { time: "15:55", title: "Japanese (Forest 202)" }
-        ]
-      },
-      "A": {
-        1: [
-          { time: "08:30", title: "Tutor Time (Quad 206)" },
-          { time: "08:55", title: "Design (DT Workshop)" },
-          { time: "09:45", title: "Design (DT Workshop)" },
-          { time: "10:55", title: "Geography (Quad 303)" },
-          { time: "11:45", title: "Geography (Quad 303)" },
-          { time: "13:55", title: "Physics (Physics Lab 2)" },
-          { time: "14:45", title: "Biology (Biology Lab 3)" },
-          { time: "15:55", title: "Chemistry (Chemistry Lab)" }
-        ],
-        2: [
-          { time: "08:30", title: "Whole School Singing" },
-          { time: "08:55", title: "Biology (Biology Lab 3)" },
-          { time: "09:45", title: "Biology (Biology Lab 3)" },
-          { time: "10:55", title: "Physics (Physics Lab)" },
-          { time: "11:45", title: "Design (Physics Lab)" },
-          { time: "13:55", title: "Japanese (Forest 202)" },
-          { time: "14:45", title: "Maths (Quad 206)" },
-          { time: "15:55", title: "Chemistry (Chemistry Lab)" }
-        ],
-        3: [
-          { time: "08:30", title: "Whole School Assembly" },
-          { time: "08:55", title: "English (Forest 203)" },
-          { time: "09:45", title: "English (Forest 203)" },
-          { time: "10:55", title: "Geography (Quad 303)" },
-          { time: "11:45", title: "Biology (Biology Lab 3)" },
-          { time: "13:55", title: "Physics (Physics Lab 2)" },
-          { time: "14:45", title: "Computer Science (CAD room 2)" },
-          { time: "15:55", title: "Computer Science (CAD room 2)" }
-        ],
-        4: [
-          { time: "08:30", title: "Tutor Time (Quad 206)" },
-          { time: "08:55", title: "Design (DT Workshop)" },
-          { time: "09:45", title: "Design (DT Workshop)" },
-          { time: "10:55", title: "Maths (Quad 206)" },
-          { time: "11:45", title: "Maths (Quad 206)" },
-          { time: "13:55", title: "Sport (1:55 - 2:40pm)" },
-          { time: "14:45", title: "Sport (2:45 - 3:30pm)" },
-          { time: "15:55", title: "Japanese (Forest 202)" }
-        ],
-        5: [
-          { time: "07:00", title: "Swimming (7 - 8am)" },
-          { time: "08:30", title: "Tutor Time (Quad 206)" },
-          { time: "08:55", title: "Japanese (Forest 202)" },
-          { time: "09:45", title: "Japanese (Forest 202)" },
-          { time: "10:55", title: "Geography (Quad 303)" },
-          { time: "11:45", title: "Geography (Quad 303)" },
-          { time: "13:55", title: "English (Forest 203)" },
-          { time: "14:45", title: "English (Forest 203)" },
-          { time: "15:55", title: "Computer Science (CAD room 2)" }
-        ]
-      }
-    };
-
-    function getActiveWeek() {
-      const anchorMonday = new Date(2026, 10, 16);
-      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const diffDays = Math.floor((todayMidnight - anchorMonday) / (1000 * 60 * 60 * 24));
-      const weeksPassed = Math.floor(diffDays / 7);
-      return Math.abs(weeksPassed) % 2 === 0 ? "B" : "A";
-    }
-
-    const currentWeek = getActiveWeek();
-    document.getElementById("sub-protocol").textContent = inTerm ? `STARK PROTOCOL // WEEK ${currentWeek}` : `STARK PROTOCOL // HOLIDAY`;
-    document.getElementById("sched-title").textContent = inTerm ? `TODAY'S TIMETABLE [WEEK ${currentWeek}]` : `TIMETABLE SUSPENDED`;
-
-    const listEl = document.getElementById("eventList");
-    const todaysEvents = (inTerm && dayOfWeek >= 1 && dayOfWeek <= 5) ? timetables[currentWeek][dayOfWeek] : [];
-
-    if (todaysEvents.length === 0) {
-      listEl.innerHTML = `<li class="event-item"><span class="event-title">No scheduled classes today.</span></li>`;
+    log("Checking window.speechSynthesis support...");
+    if (!('speechSynthesis' in window)) {
+      log("ERROR: window.speechSynthesis NOT supported on this browser!");
     } else {
-      listEl.innerHTML = todaysEvents.map(ev => `
-        <li class="event-item">
-          <span class="event-time">${ev.time}</span>
-          <span class="event-title">${ev.title}</span>
-        </li>
-      `).join("");
+      log("SUCCESS: Speech synthesis API is present.");
     }
 
-    const openingSnark = [
-      "Diagnostics indicate nominal vitals, though your motivation levels remain entirely suboptimal.",
-      "Morning. Systems are fully online, which is more than can be said for your alertness.",
-      "Telemetry suggests you survived the night. Barely.",
-      "Awakening sequence complete. Try not to waste the daylight."
-    ];
-
-    const closingSnark = [
-      "Have a productive day. Try not to break anything.",
-      "Protocol complete. Do try to stay out of trouble.",
-      "Systems nominal. Proceed with your morning routine."
-    ];
-
-    function getRandomItem(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    function speakBriefing(retries = 5) {
-      if (!('speechSynthesis' in window)) return;
-
-      const voices = window.speechSynthesis.getVoices();
+    function runDiagnostic() {
+      log("--- TAP EVENT FIRED ---");
       
-      if (voices.length === 0 && retries > 0) {
-        setTimeout(() => speakBriefing(retries - 1), 200);
+      const voices = window.speechSynthesis.getVoices();
+      log(`Total voices detected in browser: ${voices.length}`);
+
+      if (voices.length === 0) {
+        log("WARNING: Voice array is empty! Mobile browser might be blocking or delaying voices.");
+      } else {
+        // Print first 5 available voices to see what the phone actually has
+        voices.slice(0, 5).forEach((v, i) => {
+          log(`Voice [${i}]: ${v.name} (${v.lang})`);
+        });
+      }
+
+      // Try matching target voice
+      const targetVoice = voices.find(v => v.name.includes('Google UK English Male')) 
+                       || voices.find(v => v.lang === 'en-GB' && v.name.toLowerCase().includes('male'))
+                       || voices.find(v => v.lang === 'en-GB')
+                       || voices[0];
+
+      if (targetVoice) {
+        log(`SELECTED VOICE: ${targetVoice.name} (${targetVoice.lang})`);
+      } else {
+        log("ERROR: Could not find any suitable voice!");
         return;
       }
 
-      const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      let script = `${getRandomItem(openingSnark)} The current time is ${currentTimeStr}. `;
-      
-      if (inTerm && dayOfWeek === 2) {
-        script += `Remember, you're staying late at school tonight. `;
-      }
-
-      if (leaveTime) {
-        script += `Departure target is set for ${leaveTime}. `;
-      }
-      
-      script += getRandomItem(closingSnark);
-
-      document.getElementById("status").textContent = `> ${script}`;
-
+      log("Canceling previous speech queues...");
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(script);
-      utterance.rate = 0.95; 
-      utterance.pitch = 0.90; 
 
-      const voice = voices.find(v => v.name.includes('Google UK English Male')) 
-                 || voices.find(v => v.lang === 'en-GB' && v.name.toLowerCase().includes('male'))
-                 || voices.find(v => v.lang === 'en-GB')
-                 || voices[0];
-                 
-      if (voice) {
-        utterance.voice = voice;
-      }
-      
+      const utterance = new SpeechSynthesisUtterance("Diagnostic test audio operational.");
+      utterance.voice = targetVoice;
+      utterance.rate = 0.95;
+      utterance.pitch = 0.90;
+
+      utterance.onstart = () => log("EVENT: utterance.onstart fired!");
+      utterance.onend = () => log("EVENT: utterance.onend fired successfully.");
+      utterance.onerror = (e) => log(`ERROR: utterance.onerror -> ${e.error}`);
+
+      log("Executing window.speechSynthesis.speak()...");
       window.speechSynthesis.speak(utterance);
+      
+      document.getElementById("tapPrompt").textContent = "[TEST EXECUTED - CHECK LOGS ABOVE]";
     }
 
     if ('speechSynthesis' in window) {
       window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+      window.speechSynthesis.onvoiceschanged = () => {
+        log(`onvoiceschanged fired. Voices loaded: ${window.speechSynthesis.getVoices().length}`);
+      };
     }
 
-    window.addEventListener("pointerdown", () => {
-      speakBriefing();
-      document.getElementById("status").textContent = "[JARVIS VOICE ENGINE ONLINE]";
-    }, { once: true });
+    window.addEventListener("pointerdown", runDiagnostic, { once: true });
   </script>
 </body>
 </html>
