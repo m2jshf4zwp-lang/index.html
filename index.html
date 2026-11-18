@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>ALEX // Tactical Wake-Up Protocol</title>
+  <title>ALEX // Tactical HUD</title>
   <style>
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     body {
@@ -71,21 +71,18 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-around;
+      justify-content: space-between;
       flex: 1;
       width: 100%;
-      padding: 4px 0;
+      padding: 6px 0;
     }
 
-    .center-stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    .ai-banner {
+      text-align: center;
     }
 
     .ai-name {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 900;
       letter-spacing: 6px;
       color: #38bdf8;
@@ -94,76 +91,24 @@
     }
 
     .sub-title {
-      font-size: 0.55rem;
+      font-size: 0.5rem;
       letter-spacing: 3px;
       color: rgba(56, 189, 248, 0.6);
-      margin-bottom: 6px;
       text-transform: uppercase;
-    }
-
-    .hold-container {
-      position: relative;
-      width: 135px;
-      height: 135px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    svg {
-      position: absolute;
-      top: 0; left: 0;
-      transform: rotate(-90deg);
-      filter: drop-shadow(0 0 8px rgba(0, 255, 204, 0.6));
-    }
-
-    circle {
-      fill: none;
-      stroke-width: 3.5;
-    }
-
-    .bg-ring { stroke: rgba(56, 189, 248, 0.15); }
-    .progress-ring {
-      stroke: #00ffcc;
-      stroke-dasharray: 376.99;
-      stroke-dashoffset: 376.99;
-      stroke-linecap: round;
-      transition: stroke-dashoffset 0.05s linear;
-      filter: drop-shadow(0 0 6px #00ffcc);
-    }
-
-    #holdBtn {
-      width: 105px;
-      height: 105px;
-      border-radius: 50%;
-      border: 2px solid rgba(56, 189, 248, 0.6);
-      background: radial-gradient(circle, rgba(6,25,50,0.95) 0%, rgba(2,10,20,0.98) 100%);
-      color: #38bdf8;
-      font-size: 0.6rem;
-      font-weight: 800;
-      letter-spacing: 2px;
-      cursor: pointer;
-      box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.3), 0 0 20px rgba(56, 189, 248, 0.2);
-      z-index: 2;
-      transition: all 0.2s ease;
-      text-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
-    }
-
-    #holdBtn:active {
-      background: rgba(56, 189, 248, 0.25);
-      color: #00ffcc;
     }
 
     .schedule-panel {
       width: 100%;
-      max-height: 120px;
+      flex: 1;
+      max-height: calc(100vh - 145px);
       background: rgba(4, 16, 32, 0.92);
       border: 1px solid rgba(0, 255, 204, 0.4);
       border-radius: 3px;
-      padding: 6px 10px;
+      padding: 8px 10px;
       overflow-y: auto;
       text-align: left;
       box-shadow: inset 0 0 15px rgba(0, 255, 204, 0.1);
+      margin: 6px 0;
     }
 
     .schedule-header {
@@ -171,9 +116,9 @@
       color: #00ffcc;
       font-weight: bold;
       letter-spacing: 1px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       border-bottom: 1px solid rgba(0, 255, 204, 0.25);
-      padding-bottom: 2px;
+      padding-bottom: 4px;
       display: flex;
       justify-content: space-between;
     }
@@ -185,14 +130,14 @@
     }
 
     .event-item {
-      font-size: 0.6rem;
-      margin-bottom: 3px;
+      font-size: 0.7rem;
+      margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
       color: #e2e8f0;
       border-left: 2px solid #00ffcc;
-      padding-left: 6px;
-      background: rgba(56, 189, 248, 0.05);
+      padding: 4px 6px 4px 8px;
+      background: rgba(56, 189, 248, 0.06);
     }
 
     .event-time {
@@ -205,12 +150,13 @@
       z-index: 11;
       border-top: 2px solid rgba(56, 189, 248, 0.4);
       padding: 6px 8px;
-      min-height: 38px;
+      min-height: 36px;
       font-size: 0.6rem;
       color: #00ffcc;
       letter-spacing: 1px;
       text-align: center;
       text-shadow: 0 0 6px rgba(0, 255, 204, 0.4);
+      cursor: pointer;
     }
   </style>
 </head>
@@ -219,50 +165,44 @@
   <div class="hud-frame"></div>
 
   <div class="hud-header">
-    <div id="date-box">TUE // NOV 17</div>
+    <div id="date-box">THU // NOV 19</div>
     <div id="time-box">06:30</div>
     <div id="leave-badge">LEAVE: 7:30</div>
   </div>
 
   <div class="dashboard">
-    <div class="center-stage">
+    <div class="ai-banner">
       <div class="ai-name">ALEX</div>
       <div class="sub-title" id="sub-protocol">STARK PROTOCOL // WEEK B</div>
-
-      <div class="hold-container">
-        <svg width="135" height="135">
-          <circle class="bg-ring" cx="67.5" cy="67.5" r="60"></circle>
-          <circle class="progress-ring" id="ring" cx="67.5" cy="67.5" r="60"></circle>
-        </svg>
-        <button id="holdBtn">HOLD 3S</button>
-      </div>
     </div>
 
     <div class="schedule-panel">
       <div class="schedule-header">
         <span id="sched-title">TODAY'S TIMETABLE [WEEK B]</span>
-        <span>SYS.OK</span>
+        <span>SYS.ONLINE</span>
       </div>
       <ul id="eventList"></ul>
     </div>
   </div>
 
   <div class="hud-footer" id="status">
-    [SYSTEM ACTIVE // TAP SCREEN TO ARM SPEECH]
+    [TAP SCREEN TO INITIALIZE JARVIS VOICE ENGINE]
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const highTemp = params.get("high") || "14 degrees";
-    const lowTemp = params.get("low") || "8 degrees";
-    const leaveWeather = params.get("leave") || "10 degrees with lingering showers";
-
     const now = new Date();
     const dayOfWeek = now.getDay();
     const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     
-    document.getElementById("time-box").textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    function updateClock() {
+      const current = new Date();
+      document.getElementById("time-box").textContent = current.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 10000);
+
     document.getElementById("date-box").textContent = `${days[dayOfWeek]} // ${months[now.getMonth()]} ${String(now.getDate()).padStart(2, '0')}`;
 
     function isSchoolInTerm() {
@@ -420,7 +360,7 @@
     const todaysEvents = (inTerm && dayOfWeek >= 1 && dayOfWeek <= 5) ? timetables[currentWeek][dayOfWeek] : [];
 
     if (todaysEvents.length === 0) {
-      listEl.innerHTML = `<li class="event-item"><span class="event-title">No scheduled classes today (Holiday or Weekend), Sir.</span></li>`;
+      listEl.innerHTML = `<li class="event-item"><span class="event-title">No scheduled classes today.</span></li>`;
     } else {
       listEl.innerHTML = todaysEvents.map(ev => `
         <li class="event-item">
@@ -430,35 +370,17 @@
       `).join("");
     }
 
-    let audioCtx = null;
-    let alarmInterval = null;
-    let alarmPlaying = false;
-    let speechTriggered = false;
-
-    // Randomized Jarvis Snark Pools
     const openingSnark = [
-      "Good morning Sir. Biometric telemetry indicates you are barely functioning.",
-      "Rise and shine Sir. My sensors suggest you hit the snooze button spiritually.",
-      "Morning Sir. Systems are online, though your enthusiasm appears offline.",
-      "Good morning Sir. Another day, another opportunity to test my patience."
-    ];
-
-    const weatherSnark = [
-      `The weather today looks like a high of ${highTemp} and a low of ${lowTemp}.`,
-      `Atmospheric conditions indicate a high of ${highTemp} and low of ${lowTemp}. Try not to freeze, Sir.`,
-      `Current outside metrics show a high of ${highTemp} and low of ${lowTemp}.`
-    ];
-
-    const leaveSnark = [
-      `Weather by your departure should be ${leaveWeather}. And please, Sir, try to leave by ${leaveTime} so we don't repeat our usual debate.`,
-      `Conditions at departure time will be ${leaveWeather}. Aim for a prompt exit at ${leaveTime}, Sir, to avoid unnecessary friction.`,
-      `Expect ${leaveWeather} around your exit window. Depart by ${leaveTime}, Sir, for optimal domestic harmony.`
+      "Diagnostics indicate nominal vitals, though your motivation levels remain entirely suboptimal.",
+      "Morning. Systems are fully online, which is more than can be said for your alertness.",
+      "Telemetry suggests you survived the night. Barely.",
+      "Awakening sequence complete. Try not to waste the daylight."
     ];
 
     const closingSnark = [
-      "Have a productive day, Sir. Try not to break anything.",
-      "Wishing you the best today, Sir. Do try to stay out of trouble.",
-      "Protocol complete. Have an adequate day, Sir."
+      "Have a productive day. Try not to break anything.",
+      "Protocol complete. Do try to stay out of trouble.",
+      "Systems nominal. Proceed with your morning routine."
     ];
 
     function getRandomItem(arr) {
@@ -466,18 +388,17 @@
     }
 
     function speakBriefing() {
-      if (speechTriggered || !('speechSynthesis' in window)) return;
-      speechTriggered = true;
+      if (!('speechSynthesis' in window)) return;
 
       const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      let script = `${getRandomItem(openingSnark)} The current time is ${currentTimeStr}. ${getRandomItem(weatherSnark)} `;
+      let script = `${getRandomItem(openingSnark)} The current time is ${currentTimeStr}. `;
       
-      if (dayOfWeek === 2) {
-        script += `Remember, you're staying late at school tonight, Sir. `;
+      if (inTerm && dayOfWeek === 2) {
+        script += `Remember, you're staying late at school tonight. `;
       }
 
       if (leaveTime) {
-        script += `${getRandomItem(leaveSnark)} `;
+        script += `Departure target is set for ${leaveTime}. `;
       }
       
       script += getRandomItem(closingSnark);
@@ -486,12 +407,14 @@
 
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(script);
-      utterance.rate = 0.96; 
-      utterance.pitch = 0.92; 
+      utterance.rate = 0.95; 
+      utterance.pitch = 0.90; 
 
       const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find(v => v.lang === 'en-GB' && (v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('British') || v.name.includes('UK'))) 
-                 || voices.find(v => v.lang.startsWith('en')) 
+      // Specifically target Google UK English Male as tested
+      const voice = voices.find(v => v.name.includes('Google UK English Male')) 
+                 || voices.find(v => v.lang === 'en-GB' && v.name.toLowerCase().includes('male'))
+                 || voices.find(v => v.lang === 'en-GB')
                  || voices[0];
                  
       if (voice) {
@@ -501,100 +424,18 @@
       window.speechSynthesis.speak(utterance);
     }
 
+    // Preload voices
     if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
       window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
     }
 
-    // Start Alarm Sound Effect
-    function startAlarmSound() {
-      if (alarmPlaying) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      alarmPlaying = true;
-
-      alarmInterval = setInterval(() => {
-        if (!alarmPlaying) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
-      }, 450);
-    }
-
-    function stopAlarmSound() {
-      alarmPlaying = false;
-      clearInterval(alarmInterval);
-      if (audioCtx && audioCtx.state !== 'closed') {
-        audioCtx.close();
-      }
-    }
-
-    // Auto-trigger sound and speech on the very first screen interaction
+    // Unlock audio & fire briefing on first touch
     window.addEventListener("pointerdown", () => {
-      startAlarmSound();
       speakBriefing();
+      document.getElementById("status").textContent = "[JARVIS VOICE ENGINE ONLINE]";
     }, { once: true });
-
-    // 3-Second Hold Button to Disengage Alarm/Speech
-    const holdBtn = document.getElementById("holdBtn");
-    const ring = document.getElementById("ring");
-    const circumference = 376.99;
-    const holdDuration = 3000;
-
-    let holdStart = null;
-    let animFrame = null;
-    let dismissed = false;
-
-    function startHold(e) {
-      e.preventDefault();
-      if (dismissed) return;
-      holdStart = performance.now();
-      animFrame = requestAnimationFrame(updateProgress);
-    }
-
-    function updateProgress(timestamp) {
-      const elapsed = timestamp - holdStart;
-      const progress = Math.min(elapsed / holdDuration, 1);
-      ring.style.strokeDashoffset = circumference * (1 - progress);
-
-      if (progress >= 1) {
-        dismissAlarm();
-      } else {
-        animFrame = requestAnimationFrame(updateProgress);
-      }
-    }
-
-    function cancelHold() {
-      if (dismissed) return;
-      cancelAnimationFrame(animFrame);
-      ring.style.strokeDashoffset = circumference;
-    }
-
-    function dismissAlarm() {
-      dismissed = true;
-      stopAlarmSound();
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      holdBtn.innerHTML = "DISENGAGED";
-      holdBtn.style.color = "#00ffcc";
-      holdBtn.style.borderColor = "#00ffcc";
-      document.getElementById("status").textContent = "[PROTOCOL DISENGAGED // HAVE A GOOD DAY, SIR]";
-    }
-
-    holdBtn.addEventListener("touchstart", startHold);
-    holdBtn.addEventListener("mousedown", startHold);
-    holdBtn.addEventListener("touchend", cancelHold);
-    holdBtn.addEventListener("mouseup", cancelHold);
-    holdBtn.addEventListener("mouseleave", cancelHold);
   </script>
 </body>
 </html>
+```[cite: 1]
